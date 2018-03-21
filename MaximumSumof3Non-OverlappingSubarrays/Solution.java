@@ -10,17 +10,114 @@ class Solution {
     		sums[i] = new Prefix(sum(i, k, nums), i);
     	}
 
-    	MaxHeap heap = new MaxHeap(sums);
+    	quickSort(0, sums.length, sums); // this bombed sth
 
-    	// TODO: change to actually write a heap class
-    	for(int i = 0; i < 3; i++){
-    		output[i] = heap.pop().index;
+    	output[0] = sums[0].index;
+    	int maxSum = sums[0].sum;
+    	int outputI = 1;
+
+    	// testing
+    	int[] testing = new int[sums.length];
+    	for(int i = 0; i < sums.length; i++){
+    		testing[i] = sums[i].sum;
     	}
 
-    	return output;
+    	return testing;
+    	// testing
+    	/*
+    	for(int i = 1; i < sums.length && outputI < 3; i++){
+    		if(maxSum < sums[i].sum){
+    			output[outputI] = sums[i].index;
+    			maxSum = sums[i].sum;
+    			outputI++;
+    		}
+    	}
+
+    	return output;    	
+    	*/
     }
 
+    public void quickSort(int lo, int hi, Prefix[] arr){
+    	if(hi - lo <= 4){
+    		for(int i = lo; i < hi; i++){
+    			for(int s = i + 1; s < hi; s++){
+    				if(arr[s].compareTo(arr[i]) < 0){
+    					Prefix temp = arr[i];
+    					arr[i] = arr[s];
+    					arr[s] = temp;
+    				}
+    			}
+    		}
 
+    		return ;
+    	}
+
+    	// quicksort
+    	int pivot = findPivot(lo, hi, arr);
+    	// move pivot to front
+    	Prefix temp = arr[lo];
+    	arr[lo] = arr[pivot];
+    	arr[pivot] = temp;
+    	// start combing
+    	int left = lo + 1;
+    	int right = hi - 1;
+    	boolean moveLeft = true;
+
+    	while(left < right){
+    		if(moveLeft){
+    			if(arr[lo].compareTo(arr[left]) < 0){
+    				moveLeft = false;
+    			}else{
+    				left++;
+    			}
+    		}else{
+    			if(arr[lo].compareTo(arr[right]) > 0){
+    				// swap with left
+    				temp = arr[right];
+    				arr[right] = arr[left];
+    				arr[left] = temp;
+    				right--;
+    				left++;
+    				moveLeft = true;
+    			}else{
+    				right--;
+    			}
+    		}
+    	}
+
+    	if(arr[lo].compareTo(arr[left]) > 0){
+    		temp = arr[left];
+    		arr[left] = arr[lo];
+    		arr[lo] = temp;
+    	}else{
+    		temp = arr[left - 1];
+    		arr[left - 1] = arr[lo];
+    		arr[lo] = temp;
+    	}
+
+    	// resurse
+    	int mid = (lo + hi) >>> 1;
+    	quickSort(lo, mid, arr);
+    	quickSort(mid, hi, arr);
+    }
+
+    public int findPivot(int lo, int hi, Prefix[] arr){
+    	Prefix head = arr[lo];
+    	Prefix tail = arr[hi - 1];
+    	Prefix mid = arr[(lo + hi) >>> 1];
+
+    	if((head.compareTo(mid) <= 0 && head.compareTo(tail) >= 0) ||
+    		(head.compareTo(tail) <= 0 && head.compareTo(mid) >= 0)){
+    		return lo;
+    	}
+
+    	if((mid.compareTo(head) <= 0 && mid.compareTo(tail) >= 0) ||
+    		(mid.compareTo(head) >= 0 && mid.compareTo(tail) <= 0)){
+    		return (lo + hi) >>> 1;
+    	}
+
+    	return hi - 1;
+    }
 
     public int sum(int start, int k, int[] nums){
     	int output = 0;
@@ -30,70 +127,6 @@ class Solution {
     	}
 
     	return output;
-    }
-
-    private class MaxHeap{
-    	public int size;
-    	public Prefix[] heap;
-
-    	public MaxHeap(Prefix[] heap){
-    		this.heap = heap;
-    		this.size = this.heap.length;
-
-    		for(int i = this.heap.length - 1; i > 0; i--){
-	    		int parent = (i - 1) >>> 1;
-	    		if(this.heap[i].compareTo(this.heap[parent]) > 0){
-	    			// this is percolate up
-	    			Prefix temp = this.heap[i];
-	    			this.heap[i] = this.heap[parent];
-	    			this.heap[parent] = temp;
-    			}
-    		}
-    	}
-
-    	public Prefix pop(){
-    		Prefix output = this.heap[0];
-    		int parent = 0;
-    		// TODO: pop and move things up
-
-    		// remake perculate up
-    		this.heap[0] = this.heap[this.size - 1];
-    		this.size--;
-    		while(parent < this.size){
-    			int left = (parent >> 2) + 1;
-    			int right = (parent >> 2) + 2;
-    			if(!(left >= this.size && right >= this.size)){
-    				if(left >= this.size){
-    					Prefix temp = this.heap[right];
-    					this.heap[right] = this.heap[parent];
-    					this.heap[parent] = temp;
-    					parent = right;
-    				}else if(right >= this.size){
-    					Prefix temp = this.heap[left];
-    					this.heap[left] = this.heap[parent];
-    					this.heap[parent] = temp;
-    					parent = left;
-    				}else{
-    					if(this.heap[right].compareTo(this.heap[left]) > 0){
-    						Prefix temp = this.heap[right];
-	    					this.heap[right] = this.heap[parent];
-	    					this.heap[parent] = temp;
-	    					parent = right;
-    					}else{
-    						Prefix temp = this.heap[left];
-	    					this.heap[left] = this.heap[parent];
-	    					this.heap[parent] = temp;
-	    					parent = left;
-    					}
-    				}
-    			}else{
-    				parent = right;
-    			}
-    		}
-
-
-    		return output;
-    	}
     }
 
     // to store prefex of all combination
@@ -107,10 +140,6 @@ class Solution {
     	}
 
     	public int compareTo(Prefix y){
-    		if(y == null){
-    			return 1;
-    		}
-
     		if(this.sum == y.sum){
     			// if same, then compare this
     			return -(this.index - y.index);
