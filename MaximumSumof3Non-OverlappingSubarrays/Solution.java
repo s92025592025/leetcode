@@ -1,122 +1,81 @@
-
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 class Solution {
-    public int[] maxSumOfThreeSubarrays(int[] nums, int k) {
-    	Prefix[] sums = new Prefix[nums.length - k + 1];
+    public int[] maxSumOfThreeSubarrays(int[] nums, int kk) {
+    	Map<Integer, List<Integer>> sums = new TreeMap<Integer, List<Integer>>();
     	int[] output = new int[3];
 
-    	for(int i = 0; i < sums.length; i++){
-    		// get all the prefex sums
-    		sums[i] = new Prefix(sum(i, k, nums), i);
+    	for(int i = 0; i < nums.length - kk + 1; i++){
+    		int sum = sum(i, kk, nums);
+    		if(!sums.containsKey(sum)){
+    			List<Integer> list = new ArrayList<Integer>();
+    			sums.put(sum, list);
+    		}
+
+    		sums.get(sum).add(i);
     	}
 
-    	quickSort(0, sums.length, sums); // this bombed sth
+    	Integer[] sumSet = new Integer[sums.keySet().size()];
+    	sumSet = sums.keySet().toArray(sumSet);
+    	int max = Integer.MIN_VALUE;
 
-    	output[0] = sums[0].index;
-    	int maxSum = sums[0].sum;
-    	int outputI = 1;
+    	for(int i = 0; i < sumSet.length; i++){
+    		int temp = sumSet[i];
+    		for(int j = i + 1; j < sumSet.length; j++){
+    			temp += sumSet[j];
+    			for(int k = j + 1; k < sumSet.length; k++){
+    				temp += sumSet[k];
+    				if(temp > max){
+    					// check possible
+    					Checker result = check(sumSet[i], sumSet[j], sumSet[k], sums);
+    					if(result.passed){
+    						//System.out.println("sums: " + sumSet[i] + ", " + sumSet[j] + ", " + sumSet[k]);
+    						// NOTE: sums were right, but index not right
 
-    	// testing
-    	int[] testing = new int[sums.length];
-    	for(int i = 0; i < sums.length; i++){
-    		testing[i] = sums[i].sum;
-    	}
-
-    	return testing;
-    	// testing
-    	/*
-    	for(int i = 1; i < sums.length && outputI < 3; i++){
-    		if(maxSum < sums[i].sum){
-    			output[outputI] = sums[i].index;
-    			maxSum = sums[i].sum;
-    			outputI++;
+    						output = result.combination;
+    					}
+    				}
+    				temp -= sumSet[k];
+    			}
+    			temp -= sumSet[j];
     		}
     	}
 
-    	return output;    	
-    	*/
+    	return output;
     }
 
-    public void quickSort(int lo, int hi, Prefix[] arr){
-    	if(hi - lo <= 4){
-    		for(int i = lo; i < hi; i++){
-    			for(int s = i + 1; s < hi; s++){
-    				if(arr[s].compareTo(arr[i]) < 0){
-    					Prefix temp = arr[i];
-    					arr[i] = arr[s];
-    					arr[s] = temp;
+    public Checker check(int i, int j, int k, Map<Integer, List<Integer>> indexList){
+    	Checker output = new Checker();
+    	List<Integer> iIndexs = indexList.get(i);
+    	List<Integer> jIndexs = indexList.get(j);
+    	List<Integer> kIndexs = indexList.get(k);
+
+    	for(int ii = 0; ii < iIndexs.size(); ii++){
+    		for(int jj = 0; jj < jIndexs.size(); jj++){
+    			if(Math.abs(iIndexs.get(ii) - jIndexs.get(jj)) > 1){
+    				for(int kk = 0; kk < kIndexs.size(); kk++){
+    					if(Math.abs(iIndexs.get(ii) - kIndexs.get(kk)) > 1 &&
+    						Math.abs(jIndexs.get(jj) - kIndexs .get(kk)) > 1){
+    						output.passed = true;
+    						output.combination[0] = iIndexs.get(ii);
+    						output.combination[1] = jIndexs.get(jj);
+    						output.combination[2] = iIndexs.get(kk);
+    					}
     				}
     			}
     		}
-
-    		return ;
     	}
 
-    	// quicksort
-    	int pivot = findPivot(lo, hi, arr);
-    	// move pivot to front
-    	Prefix temp = arr[lo];
-    	arr[lo] = arr[pivot];
-    	arr[pivot] = temp;
-    	// start combing
-    	int left = lo + 1;
-    	int right = hi - 1;
-    	boolean moveLeft = true;
-
-    	while(left < right){
-    		if(moveLeft){
-    			if(arr[lo].compareTo(arr[left]) < 0){
-    				moveLeft = false;
-    			}else{
-    				left++;
-    			}
-    		}else{
-    			if(arr[lo].compareTo(arr[right]) > 0){
-    				// swap with left
-    				temp = arr[right];
-    				arr[right] = arr[left];
-    				arr[left] = temp;
-    				right--;
-    				left++;
-    				moveLeft = true;
-    			}else{
-    				right--;
-    			}
-    		}
-    	}
-
-    	if(arr[lo].compareTo(arr[left]) > 0){
-    		temp = arr[left];
-    		arr[left] = arr[lo];
-    		arr[lo] = temp;
-    	}else{
-    		temp = arr[left - 1];
-    		arr[left - 1] = arr[lo];
-    		arr[lo] = temp;
-    	}
-
-    	// resurse
-    	int mid = (lo + hi) >>> 1;
-    	quickSort(lo, mid, arr);
-    	quickSort(mid, hi, arr);
+    	return output;
     }
 
-    public int findPivot(int lo, int hi, Prefix[] arr){
-    	Prefix head = arr[lo];
-    	Prefix tail = arr[hi - 1];
-    	Prefix mid = arr[(lo + hi) >>> 1];
-
-    	if((head.compareTo(mid) <= 0 && head.compareTo(tail) >= 0) ||
-    		(head.compareTo(tail) <= 0 && head.compareTo(mid) >= 0)){
-    		return lo;
-    	}
-
-    	if((mid.compareTo(head) <= 0 && mid.compareTo(tail) >= 0) ||
-    		(mid.compareTo(head) >= 0 && mid.compareTo(tail) <= 0)){
-    		return (lo + hi) >>> 1;
-    	}
-
-    	return hi - 1;
+    class Checker{
+    	int[] combination = new int[3];
+    	boolean passed = false;;
     }
 
     public int sum(int start, int k, int[] nums){
@@ -127,26 +86,5 @@ class Solution {
     	}
 
     	return output;
-    }
-
-    // to store prefex of all combination
-    class Prefix implements Comparable<Prefix>{
-    	public int sum;
-    	public int index;
-
-    	public Prefix(int sum, int index){
-    		this.sum = sum;
-    		this.index = index;
-    	}
-
-    	public int compareTo(Prefix y){
-    		if(this.sum == y.sum){
-    			// if same, then compare this
-    			return -(this.index - y.index);
-    		}
-
-    		// compare this first
-    		return this.sum - y.sum;
-    	}
     }
 }
