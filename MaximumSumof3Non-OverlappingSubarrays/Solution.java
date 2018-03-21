@@ -1,36 +1,61 @@
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Stack;
+import java.util.Queue;
+import java.util.LinkedList;
 import java.util.Arrays;
 
 class Solution {
     public int[] maxSumOfThreeSubarrays(int[] nums, int k) {
     	Prefix[] sums = new Prefix[nums.length - k + 1];
+    	Stack<Prefix> rLargest = new Stack<Prefix>();
+    	Queue<Prefix> lLargest = new LinkedList<Prefix>(); 
     	int[] output = new int[3];
 
     	for(int i = 0; i < sums.length; i++){
-    		sums[i] = new Prefix(sum(i, k, nums), i);
+    		Prefix temp = new Prefix(sum(i, k, nums), i);
+    		if(rLargest.empty()){
+    			rLargest.push(temp);
+    			lLargest.add(temp);
+    		}
+
+    		sums[i] = temp;
+
+    		if(temp.sum > rLargest.peek().sum){
+    			rLargest.push(temp);
+    			lLargest.add(temp);
+    		}
     	}
 
-    	Arrays.sort(sums);
+    	rLargest = new Stack<Prefix>();
+
+    	// make rLargest
+    	for(int i = sums.length - 1; i >= 0; i--){
+    		if(rLargest.empty()){
+    			rLargest.push(sums[i]);
+    		}else if(sums[i].sum >= rLargest.peek().sum){
+    			rLargest.push(sums[i]);
+    		}
+    	}
 
     	int maxSum = Integer.MIN_VALUE;
 
-    	for(int i = 0; i < sums.length; i++){
-    		for(int j = i + 1; j < sums.length; j++){
-    			if(Math.abs(sums[i].index - sums[j].index) > k - 1){
-    				for(int kk = j + 1; kk < sums.length; kk++){
-    					if(Math.abs(sums[i].index - sums[kk].index) > k - 1 &&
-    						Math.abs(sums[j].index - sums[kk].index) > k - 1 &&
-    						sums[i].sum + sums[j].sum + sums[kk].sum > maxSum){
-    						output[0] = sums[i].index;
-    						output[1] = sums[j].index;
-    						output[2] = sums[kk].index;
-    						maxSum = sums[i].sum + sums[j].sum + sums[kk].sum;
-    					}
-    				}
-    			}
+    	// reconsider this part
+    	for(int i = k; i < sums.length - k; i++){
+    		Prefix lMax = lLargest.peek();
+    		if(sums[i].sum > lMax.sum){ // maybe not i, is i - (k - 2) or sth since the next max may not be
+    									// immidiately available
+    			lLargest.remove();
+    		}
+
+    		Prefix rMax = rLargest.peek();
+    		if(sums[i + (k - 1)].compareTo(rMax) == 0){ // maybe not i + (k - 1), same reason as last comment explained
+    			rLargest.pop();
+    		}
+
+    		if(rMax.sum + lMax.sum + sums[i].sum > maxSum){
+    			maxSum = rMax.sum + lMax.sum + sums[i].sum;
+    			output[0] = rMax.index;
+    			output[1] = lMax.index;
+    			output[2] = sums[i].index;
     		}
     	}
 
