@@ -5,77 +5,37 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 class Solution {
-    public int[] maxSumOfThreeSubarrays(int[] nums, int kk) {
-    	Map<Integer, List<Integer>> sums = new TreeMap<Integer, List<Integer>>();
+    public int[] maxSumOfThreeSubarrays(int[] nums, int k) {
+    	Prefix[] sums = new Prefix[nums.length - k + 1];
     	int[] output = new int[3];
 
-    	for(int i = 0; i < nums.length - kk + 1; i++){
-    		int sum = sum(i, kk, nums);
-    		if(!sums.containsKey(sum)){
-    			List<Integer> list = new ArrayList<Integer>();
-    			sums.put(sum, list);
-    		}
-
-    		sums.get(sum).add(i);
+    	for(int i = 0; i < sums.length; i++){
+    		sums[i] = new Prefix(sum(i, k, nums), i);
     	}
 
-    	Integer[] sumSet = new Integer[sums.keySet().size()];
-    	sumSet = sums.keySet().toArray(sumSet);
-    	int max = Integer.MIN_VALUE;
+    	Arrays.sort(sums);
 
-    	for(int i = 0; i < sumSet.length; i++){
-    		int temp = sumSet[i];
-    		for(int j = i + 1; j < sumSet.length; j++){
-    			temp += sumSet[j];
-    			for(int k = j + 1; k < sumSet.length; k++){
-    				temp += sumSet[k];
-    				if(temp > max){
-    					// check possible
-    					Checker result = check(sumSet[i], sumSet[j], sumSet[k], sums);
-    					if(result.passed){
-    						//System.out.println("sums: " + sumSet[i] + ", " + sumSet[j] + ", " + sumSet[k]);
-    						// NOTE: sums were right, but index not right
+    	int maxSum = Integer.MIN_VALUE;
 
-    						output = result.combination;
-    					}
-    				}
-    				temp -= sumSet[k];
-    			}
-    			temp -= sumSet[j];
-    		}
-    	}
-
-    	return output;
-    }
-
-    public Checker check(int i, int j, int k, Map<Integer, List<Integer>> indexList){
-    	Checker output = new Checker();
-    	List<Integer> iIndexs = indexList.get(i);
-    	List<Integer> jIndexs = indexList.get(j);
-    	List<Integer> kIndexs = indexList.get(k);
-
-    	for(int ii = 0; ii < iIndexs.size(); ii++){
-    		for(int jj = 0; jj < jIndexs.size(); jj++){
-    			if(Math.abs(iIndexs.get(ii) - jIndexs.get(jj)) > 1){
-    				for(int kk = 0; kk < kIndexs.size(); kk++){
-    					if(Math.abs(iIndexs.get(ii) - kIndexs.get(kk)) > 1 &&
-    						Math.abs(jIndexs.get(jj) - kIndexs .get(kk)) > 1){
-    						output.passed = true;
-    						output.combination[0] = iIndexs.get(ii);
-    						output.combination[1] = jIndexs.get(jj);
-    						output.combination[2] = iIndexs.get(kk);
+    	for(int i = 0; i < sums.length; i++){
+    		for(int j = i + 1; j < sums.length; j++){
+    			if(Math.abs(sums[i].index - sums[j].index) > k - 1){
+    				for(int kk = j + 1; kk < sums.length; kk++){
+    					if(Math.abs(sums[i].index - sums[kk].index) > k - 1 &&
+    						Math.abs(sums[j].index - sums[kk].index) > k - 1 &&
+    						sums[i].sum + sums[j].sum + sums[kk].sum > maxSum){
+    						output[0] = sums[i].index;
+    						output[1] = sums[j].index;
+    						output[2] = sums[kk].index;
+    						maxSum = sums[i].sum + sums[j].sum + sums[kk].sum;
     					}
     				}
     			}
     		}
     	}
 
+		Arrays.sort(output);
     	return output;
-    }
-
-    class Checker{
-    	int[] combination = new int[3];
-    	boolean passed = false;;
     }
 
     public int sum(int start, int k, int[] nums){
@@ -86,5 +46,23 @@ class Solution {
     	}
 
     	return output;
+    }
+
+    class Prefix implements Comparable<Prefix>{
+    	int sum;
+    	int index;
+
+    	public Prefix(int sum, int index){
+    		this.sum = sum;
+    		this.index = index;
+    	}
+
+    	public int compareTo(Prefix y){
+    		if(this.sum == y.sum){
+    			return this.index - y.index;
+    		}
+
+    		return -(this.sum - y.sum);
+    	}
     }
 }
