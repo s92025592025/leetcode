@@ -28,7 +28,7 @@ class Solution {
     	rLargest = new Stack<Prefix>();
 
     	// make rLargest
-    	for(int i = sums.length - 1; i >= 0; i--){
+    	for(int i = sums.length - 1; i > k + (k - 1); i--){
     		if(rLargest.empty()){
     			rLargest.push(sums[i]);
     		}else if(sums[i].sum >= rLargest.peek().sum){
@@ -41,13 +41,13 @@ class Solution {
     	// reconsider this part
     	for(int i = k; i < sums.length - k; i++){
     		Prefix lMax = lLargest.peek();
-    		if(sums[i].sum > lMax.sum){ // maybe not i, is i - (k - 2) or sth since the next max may not be
+    		if(sums[i - (k - 1)].sum > lMax.sum){ // maybe not i, is i - (k - 2) or sth since the next max may not be
     									// immidiately available
     			lLargest.remove();
     		}
 
     		Prefix rMax = rLargest.peek();
-    		if(sums[i + (k - 1)].compareTo(rMax) == 0){ // maybe not i + (k - 1), same reason as last comment explained
+    		if(sums[i + k].compareTo(rMax) == 0){ // maybe not i + (k - 1), same reason as last comment explained
     			rLargest.pop();
     		}
 
