@@ -53,13 +53,12 @@ class Solution {
 
     		if(rMax.sum + lMax.sum + sums[i].sum > maxSum){
     			maxSum = rMax.sum + lMax.sum + sums[i].sum;
-    			output[0] = rMax.index;
-    			output[1] = lMax.index;
-    			output[2] = sums[i].index;
+    			output[0] = lMax.index;
+    			output[1] = sums[i].index;
+    			output[2] = rMax.index;
     		}
     	}
 
-		Arrays.sort(output);
     	return output;
     }
 
